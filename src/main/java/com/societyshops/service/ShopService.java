@@ -17,12 +17,13 @@ public class ShopService {
 
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     public Shop registerShop(ShopRequest request, Long ownerId) {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Shop shop = Shop.builder()
+        Shop shop = shopRepository.save(Shop.builder()
                 .owner(owner)
                 .name(request.getName())
                 .description(request.getDescription())
@@ -33,9 +34,10 @@ public class ShopService {
                 .closeTime(request.getCloseTime())
                 .status(ShopStatus.CLOSED)
                 .isApproved(false)
-                .build();
+                .build());
 
-        return shopRepository.save(shop);
+        emailService.sendShopApprovalRequest(shop.getName(), owner.getName(), owner.getEmail(), shop.getId());
+        return shop;
     }
 
     public Shop toggleStatus(Long shopId, Long ownerId) {

@@ -9,8 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,41 +36,35 @@ public class InventoryController {
 
     @PostMapping("/shop/{shopId}")
     @PreAuthorize("hasRole('SHOPKEEPER')")
-    public ResponseEntity<ApiResponse<Inventory>> addItem(
-            @PathVariable Long shopId,
-            @Valid @RequestBody InventoryRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(ApiResponse.success("Item added", inventoryService.addItem(shopId, request, getUserId(userDetails))));
+    public ResponseEntity<ApiResponse<Inventory>> addItem(@PathVariable Long shopId,
+                                                           @Valid @RequestBody InventoryRequest request,
+                                                           Authentication auth) {
+        return ResponseEntity.ok(ApiResponse.success("Item added", inventoryService.addItem(shopId, request, getUserId(auth))));
     }
 
     @PutMapping("/{itemId}")
     @PreAuthorize("hasRole('SHOPKEEPER')")
-    public ResponseEntity<ApiResponse<Inventory>> updateItem(
-            @PathVariable Long itemId,
-            @Valid @RequestBody InventoryRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(ApiResponse.success("Item updated", inventoryService.updateItem(itemId, request, getUserId(userDetails))));
+    public ResponseEntity<ApiResponse<Inventory>> updateItem(@PathVariable Long itemId,
+                                                              @Valid @RequestBody InventoryRequest request,
+                                                              Authentication auth) {
+        return ResponseEntity.ok(ApiResponse.success("Item updated", inventoryService.updateItem(itemId, request, getUserId(auth))));
     }
 
     @PutMapping("/{itemId}/toggle")
     @PreAuthorize("hasRole('SHOPKEEPER')")
-    public ResponseEntity<ApiResponse<Inventory>> toggleAvailability(
-            @PathVariable Long itemId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(ApiResponse.success("Availability updated", inventoryService.toggleAvailability(itemId, getUserId(userDetails))));
+    public ResponseEntity<ApiResponse<Inventory>> toggleAvailability(@PathVariable Long itemId, Authentication auth) {
+        return ResponseEntity.ok(ApiResponse.success("Availability updated", inventoryService.toggleAvailability(itemId, getUserId(auth))));
     }
 
     @DeleteMapping("/{itemId}")
     @PreAuthorize("hasRole('SHOPKEEPER')")
-    public ResponseEntity<ApiResponse<Void>> deleteItem(
-            @PathVariable Long itemId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        inventoryService.deleteItem(itemId, getUserId(userDetails));
+    public ResponseEntity<ApiResponse<Void>> deleteItem(@PathVariable Long itemId, Authentication auth) {
+        inventoryService.deleteItem(itemId, getUserId(auth));
         return ResponseEntity.ok(ApiResponse.success("Item deleted", null));
     }
 
-    private Long getUserId(UserDetails userDetails) {
-        return userRepository.findByEmail(userDetails.getUsername())
+    private Long getUserId(Authentication auth) {
+        return userRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"))
                 .getId();
     }

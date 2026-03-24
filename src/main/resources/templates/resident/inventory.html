@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Shop Inventory · Society Shops</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body class="dash-body">
+
+<button class="sidebar-toggle">☰</button>
+<div class="sidebar-overlay"></div>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">🏪 <span>Society Shops</span></div>
+    <div class="sidebar-role">Resident Portal</div>
+    <nav class="sidebar-nav">
+        <a th:href="@{/web/resident/dashboard}" class="nav-item"><span class="ni">🏠</span> Dashboard</a>
+        <a href="#" class="nav-item active"><span class="ni">📦</span> Shop Items</a>
+    </nav>
+    <div class="sidebar-divider"></div>
+    <a th:href="@{/web/logout}" class="sidebar-logout">⏻ Logout</a>
+</aside>
+
+<div class="dash-main">
+    <header class="dash-header">
+        <div>
+            <div class="dash-title">🛒 Shop Inventory</div>
+            <div class="dash-subtitle">Available items in this shop</div>
+        </div>
+        <div class="header-right">
+            <div class="search-wrap">
+                <input type="text" id="itemSearch" placeholder="Search items... (press /)" oninput="filterItems()" />
+            </div>
+            <a th:href="@{/web/resident/dashboard}" class="btn btn-outline btn-sm">← Back</a>
+            <div class="avatar" title="Resident">R</div>
+        </div>
+    </header>
+
+    <div class="dash-content">
+        <div class="card">
+            <div class="card-header">
+                <h3>📦 Available Items</h3>
+                <span class="badge-pill badge-blue" th:text="${items.size()} + ' items'"></span>
+            </div>
+            <div th:if="${items.empty}" class="empty-state">
+                <div class="empty-icon">📦</div><p>No items available in this shop right now.</p>
+            </div>
+            <div class="item-grid" id="itemGrid" th:if="${!items.empty}">
+                <div class="item-card" th:each="item : ${items}" th:attr="data-name=${item.name}">
+                    <div class="item-card-top">
+                        <div class="item-icon">🛍️</div>
+                        <div class="item-name" th:text="${item.name}"></div>
+                    </div>
+                    <div class="item-desc" th:text="${item.description}">—</div>
+                    <div class="item-footer">
+                        <span class="price-tag" th:text="'₹' + ${item.price}"></span>
+                        <span class="item-unit" th:text="${item.unit}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/css/dashboard.js}"></script>
+</body>
+</html>

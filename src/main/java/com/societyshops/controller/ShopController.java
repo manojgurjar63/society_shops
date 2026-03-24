@@ -10,8 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,34 +37,28 @@ public class ShopController {
 
     @PostMapping
     @PreAuthorize("hasRole('SHOPKEEPER')")
-    public ResponseEntity<ApiResponse<Shop>> registerShop(
-            @Valid @RequestBody ShopRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        Shop shop = shopService.registerShop(request, getUserId(userDetails));
+    public ResponseEntity<ApiResponse<Shop>> registerShop(@Valid @RequestBody ShopRequest request, Authentication auth) {
+        Shop shop = shopService.registerShop(request, getUserId(auth));
         return ResponseEntity.ok(ApiResponse.success("Shop registered, awaiting approval", shop));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('SHOPKEEPER')")
-    public ResponseEntity<ApiResponse<Shop>> updateShop(
-            @PathVariable Long id,
-            @Valid @RequestBody ShopRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(ApiResponse.success("Shop updated", shopService.updateShop(id, request, getUserId(userDetails))));
+    public ResponseEntity<ApiResponse<Shop>> updateShop(@PathVariable Long id,
+                                                         @Valid @RequestBody ShopRequest request, Authentication auth) {
+        return ResponseEntity.ok(ApiResponse.success("Shop updated", shopService.updateShop(id, request, getUserId(auth))));
     }
 
     @PutMapping("/{id}/toggle")
     @PreAuthorize("hasRole('SHOPKEEPER')")
-    public ResponseEntity<ApiResponse<Shop>> toggleStatus(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(ApiResponse.success("Status updated", shopService.toggleStatus(id, getUserId(userDetails))));
+    public ResponseEntity<ApiResponse<Shop>> toggleStatus(@PathVariable Long id, Authentication auth) {
+        return ResponseEntity.ok(ApiResponse.success("Status updated", shopService.toggleStatus(id, getUserId(auth))));
     }
 
     @GetMapping("/my")
     @PreAuthorize("hasRole('SHOPKEEPER')")
-    public ResponseEntity<ApiResponse<List<Shop>>> getMyShops(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(ApiResponse.success("Your shops", shopService.getMyShops(getUserId(userDetails))));
+    public ResponseEntity<ApiResponse<List<Shop>>> getMyShops(Authentication auth) {
+        return ResponseEntity.ok(ApiResponse.success("Your shops", shopService.getMyShops(getUserId(auth))));
     }
 
     @GetMapping("/pending")
@@ -87,8 +80,8 @@ public class ShopController {
         return ResponseEntity.ok(ApiResponse.success("Shop rejected", null));
     }
 
-    private Long getUserId(UserDetails userDetails) {
-        return userRepository.findByEmail(userDetails.getUsername())
+    private Long getUserId(Authentication auth) {
+        return userRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"))
                 .getId();
     }
